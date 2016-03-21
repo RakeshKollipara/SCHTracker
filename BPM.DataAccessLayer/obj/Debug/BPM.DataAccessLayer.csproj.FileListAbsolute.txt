@@ -1,0 +1,7 @@
+D:\BPM\BPM.DataAccessLayer\bin\Debug\BPM.DataAccessLayer.dll
+D:\BPM\BPM.DataAccessLayer\bin\Debug\BPM.DataAccessLayer.pdb
+D:\BPM\BPM.DataAccessLayer\bin\Debug\BPM.BusinessEntities.dll
+D:\BPM\BPM.DataAccessLayer\bin\Debug\BPM.BusinessEntities.pdb
+D:\BPM\BPM.DataAccessLayer\obj\Debug\BPM.DataAccessLayer.csprojResolveAssemblyReference.cache
+D:\BPM\BPM.DataAccessLayer\obj\Debug\BPM.DataAccessLayer.dll
+D:\BPM\BPM.DataAccessLayer\obj\Debug\BPM.DataAccessLayer.pdb

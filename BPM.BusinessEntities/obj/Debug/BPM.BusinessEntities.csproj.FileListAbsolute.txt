@@ -1,0 +1,5 @@
+D:\BPM\BPM.BusinessEntities\bin\Debug\BPM.BusinessEntities.dll
+D:\BPM\BPM.BusinessEntities\bin\Debug\BPM.BusinessEntities.pdb
+D:\BPM\BPM.BusinessEntities\obj\Debug\BPM.BusinessEntities.dll
+D:\BPM\BPM.BusinessEntities\obj\Debug\BPM.BusinessEntities.pdb
+D:\BPM\BPM.BusinessEntities\obj\Debug\BPM.BusinessEntities.csprojResolveAssemblyReference.cache

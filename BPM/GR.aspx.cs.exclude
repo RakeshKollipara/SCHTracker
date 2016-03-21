@@ -1,0 +1,807 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using BPM.BusinessEntities;
+using BPM.BusinessComponents;
+using System.Configuration;
+using System.Xml;
+using System.IO;
+
+public partial class GR_File : System.Web.UI.Page
+{
+
+    int pos;
+    PagedDataSource adsource;
+    int posHistory;
+    PagedDataSource adsourceHistory;
+    private const string vGRList = "vGRList";
+    private const string vSortDir = "sortDirection";
+    private const string vSortDirLine = "sortDirectionLine";
+    private const string grdPageSize = "grdPazeSize";
+    LogHelper logFile = new LogHelper();
+    protected void Page_Load(object sender, EventArgs e)
+    {
+        Page.Title = "GR Search";
+        if (!IsPostBack)
+        {
+            lblSearchError.Text = "";
+            PopulateServiceComponentDropDown("", "", "", "PARTNERS");
+            BindRepeater();
+        }
+    }
+
+    private void BindRepeater()
+    {
+        ViewState[vSortDir] = SortDirection.Ascending;
+        int intPageSize = Utils.bindRepeater(RepGvPaging);
+        ViewState[grdPageSize] = intPageSize.ToString();
+        lblRec.ToolTip = intPageSize.ToString();
+        Utils.SetRptDefaultPage(RepGvPaging, intPageSize);
+        lblSearchError.Visible = false;
+        Session[vGRList] = null;
+    }
+
+    private void PopulateServiceComponentDropDown(string ServiceLineID, string ServiceID, string ServiceOptionID, string ServCompType)
+    {
+        try
+        {
+            DropDownBC objBC = new DropDownBC();
+            GenericCollection<ServiceComponent> ServiceComponentList = new GenericCollection<ServiceComponent>();
+            ServiceComponentList = objBC.GetServiceComponentList(ServiceLineID, ServiceID, ServiceOptionID, ServCompType);
+            drdServiceComponentPartnerSearch.DataTextField = "ServiceComponentDesc";
+            drdServiceComponentPartnerSearch.DataValueField = "ServiceComponentDesc";
+            drdServiceComponentPartnerSearch.DataSource = ServiceComponentList;
+            drdServiceComponentPartnerSearch.DataBind();
+            //if (drdServiceComponentPartnerSearch != null)
+            //{
+            //    foreach (ListItem li in drdServiceComponentPartnerSearch.Items)
+            //    {
+            //        li.Attributes["title"] = li.Text;
+            //    }
+            //}
+            drdServiceComponentPartnerSearch.Items.Insert(0, new ListItem(String.Empty, String.Empty));
+        }
+        catch (Exception ex)
+        {
+            logFile.ErrorLogging(ex);
+        }
+    }
+
+
+
+
+
+    protected void retainDropdownToolTip(DropDownList dropdown)
+    {
+        foreach (ListItem _listItem in dropdown.Items)
+        {
+            _listItem.Attributes.Add("title", _listItem.Text);
+        }
+        dropdown.Attributes.Add("onmouseover", "this.title=this.options[this.selectedIndex].title");
+    }
+    protected void btnSearch_Click(object sender, EventArgs e)
+    {
+        lblSearchError.Text = "";
+        trPODetails.Visible = false;
+        gvGR.DataSource = null;
+        gvGR.DataBind();
+        rowGrid.Visible = false;
+        lblSearchError.Visible = false;
+        BindRepeater();
+        BindPurchaseOrder();
+    }
+
+    private void BindPurchaseOrder()
+    {
+        TransactionBC objBC = new TransactionBC();
+        try
+        {
+            trPODetails.Visible = false;
+            DateTime? DateFrom = txtDateFrom.Text == "" ? Convert.ToDateTime("1/1/1990") : Convert.ToDateTime(txtDateFrom.Text);
+            DateTime? DateTo = txtDateTo.Text == "" ? Convert.ToDateTime("12/31/2050") : Convert.ToDateTime(txtDateTo.Text);
+            TimeSpan? duration = null;
+
+            // Assign values to a and b...
+
+            if (DateFrom.HasValue && DateTo.HasValue)
+            {
+                duration = DateTo.Value - DateFrom.Value;
+            }
+
+            double days = duration.GetValueOrDefault().TotalDays;
+
+            //if (days > 15)
+            //{
+            //    lblSearchError.Text = "Please select 15 Days difference between dates as GR has high volume of data.";
+            //    lblSearchError.Visible = true;
+            //    return;
+            //}
+
+            GenericCollection<GRHeaderBE> listOfBE = objBC.GetGRArchiveFiles(DateFrom, DateTo, drdTxnType.SelectedValue, drdServiceComponentPartnerSearch.SelectedValue);
+            GenericCollection<GRHeaderBE> DisplayList = new GenericCollection<GRHeaderBE>();
+
+            //for (int i = 0; i < listOfBE.Count; i++)
+            //{
+            //    for (int j = 0; j < listOfBE.Count; j++)
+            //    {
+            //        TimeSpan? duration = listOfBE[i].TxnDate.Value - listOfBE[j].TxnDate.Value;
+
+            //        if (duration.Value.Duration().TotalSeconds < 20)
+            //            listOfBE[j].TxnDate = listOfBE[i].TxnDate;
+            //    }
+            //}
+
+            //for (int j = 0; j < listOfBE.Count; j++)
+            //{
+            //    if (DisplayList.Count == 0)
+            //    {
+            //        DisplayList.Add(j, listOfBE[j]);
+            //    }
+            //    else
+            //    {
+            //        bool duplicate = false;
+            //        for (int k = 0; k < DisplayList.Count; k++)
+            //        {
+            //            if (listOfBE[j].TxnDate == DisplayList[k].TxnDate)
+            //                duplicate = true;
+            //        }
+            //        if (!duplicate)
+            //            DisplayList.Add(DisplayList.Count, listOfBE[j]);
+            //    }
+            //}
+
+            //if (DisplayList.Count > 0)
+            //{
+            //    listOfBE = DisplayList;
+            //    DisplayList = null;
+            //}
+
+            listOfBE = PrepareGRList(listOfBE);
+
+            for (int j = 0; j < listOfBE.Count; j++)
+            {
+                if (DisplayList.Count == 0)
+                    DisplayList.Add(j, listOfBE[j]);
+                bool duplicate = false;
+                for (int k = 0; k < DisplayList.Count; k++)
+                {
+                    if (listOfBE[j].ControlNumber == DisplayList[k].ControlNumber)
+                        duplicate = true;
+                }
+                if (!duplicate)
+                    DisplayList.Add(DisplayList.Count, listOfBE[j]);
+
+            }
+            if (DisplayList != null)
+                listOfBE = DisplayList;
+            DisplayList = null;
+
+            if (txtLoadID.Text != "")
+            {
+                int counter = 0;
+                for (int j = 0; j < listOfBE.Count; j++)
+                {
+                    if (listOfBE[j].GRLines != null)
+                    {
+                        for (int k = 0; k < listOfBE[j].GRLines.Count; k++)
+                        {
+                            if (listOfBE[j].GRLines[k].LoadID.ToLower() == txtLoadID.Text.Trim().ToLower())
+                            {
+                                DisplayList.Add(counter, listOfBE[j]);
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (DisplayList != null)
+                    listOfBE = DisplayList;
+                DisplayList = null;
+            }
+
+
+            if (txtPONumber.Text != "")
+            {
+                int counter = 0;
+                for (int j = 0; j < listOfBE.Count; j++)
+                {
+                    if (listOfBE[j].GRLines != null)
+                    {
+                        for (int k = 0; k < listOfBE[j].GRLines.Count; k++)
+                        {
+                            if (listOfBE[j].GRLines[k].LoadID.ToLower() == txtPONumber.Text.Trim().ToLower())
+                            {
+                                DisplayList.Add(counter, listOfBE[j]);
+                                break;
+                            }
+                        }
+                    }
+                } if (DisplayList != null)
+                    listOfBE = DisplayList;
+                DisplayList = null;
+            }
+            Session[vGRList] = listOfBE;
+
+
+
+            if (ViewState[grdPageSize] != null)
+            {
+                gvGR.PageSize = Convert.ToInt32(ViewState[grdPageSize].ToString());
+            }
+            else
+            {
+                gvGR.PageSize = 10;
+            }
+
+
+            lblRec.Text = Utils.GridRecDispMsg(gvGR.PageIndex, gvGR.PageSize, listOfBE.Count);
+            gvGR.Visible = true;
+            if (listOfBE != null && listOfBE.Count > 0)
+            {
+
+                rowPage.Visible = true;
+                rowGrid.Visible = true;
+
+                gvGR.DataSource = listOfBE;
+                gvGR.DataBind();
+                lblRec.Text = Utils.GridRecDispMsg(gvGR.PageIndex, gvGR.PageSize, listOfBE.Count);
+                gvGR.Visible = true;
+                lblRec.Visible = true;
+            }
+            else
+            {
+                lblRec.Visible = false;
+                rowGrid.Visible = false;
+                rowPage.Visible = false;
+
+
+                gvGR.Visible = false;
+                gvGR.DataSource = null;
+                gvGR.DataBind();
+                lblSearchError.Text = "No records found.";
+                lblSearchError.Visible = true;
+
+            }
+
+
+        }
+        catch (Exception ex)
+        {
+            lblSearchError.Text = ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(ex);
+        }
+    }
+
+    private GenericCollection<GRHeaderBE> PrepareGRList(GenericCollection<GRHeaderBE> listOfBE)
+    {
+        GenericCollection<GRHeaderBE> DisplayList = new GenericCollection<GRHeaderBE>();
+        for (int i = 0; i < listOfBE.Count; i++)
+        {
+            for (int j = 0; j < listOfBE.Count; j++)
+            {
+                TimeSpan? duration = listOfBE[i].TxnDate.Value - listOfBE[j].TxnDate.Value;
+
+                if (duration.Value.Duration().TotalSeconds < 10)
+                    listOfBE[j].TxnDate = listOfBE[i].TxnDate;
+            }
+        }
+
+        for (int j = 0; j < listOfBE.Count; j++)
+        {
+            if (DisplayList.Count == 0)
+            {
+                DisplayList.Add(j, listOfBE[j]);
+            }
+            else
+            {
+                bool duplicate = false;
+                for (int k = 0; k < DisplayList.Count; k++)
+                {
+                    if (listOfBE[j].TxnDate == DisplayList[k].TxnDate)
+                        duplicate = true;
+                }
+                if (!duplicate)
+                    DisplayList.Add(DisplayList.Count, listOfBE[j]);
+            }
+        }
+
+        if (DisplayList.Count > 0)
+            listOfBE = DisplayList;
+
+        TransactionBC objTranBC = new TransactionBC();
+        PurchaseOrderBC objBC = new PurchaseOrderBC();
+        GenericCollection<GRHeaderBE> GRList = new GenericCollection<GRHeaderBE>();
+        for (int i = 0; i < listOfBE.Count; i++)
+        {
+            GRHeaderBE objBE = new GRHeaderBE();
+            objBE.SNo = i;
+            objBE.TxnDate = listOfBE[i].TxnDate;
+            //string File = listOfBE[0].ArchiveFile;
+            XmlDocument GRFile = new XmlDocument();
+            //GRFile.Load(@"D:\BPM\SampleFiles\GREGLFiles.xml");
+            if (File.Exists(listOfBE[i].ArchiveFile))
+                GRFile.Load(listOfBE[i].ArchiveFile);
+            else
+                continue;
+            objBE.ArchiveFile = listOfBE[i].ArchiveFile;
+            XmlNamespaceManager namespaceManager = new XmlNamespaceManager(GRFile.NameTable);
+            namespaceManager.AddNamespace("ns0", "http://MS.IT.Ops.CM.RcvInventoryMovement_V01_00_00");
+
+            XmlNode xPartnerNode = GRFile.SelectSingleNode("ns0:RcvInventoryMovement_V01_00_00/ApplicationArea/Sender/ns0:LogicalId", namespaceManager);
+            objBE.CM = xPartnerNode == null ? "" : objBC.GetPartnerName(xPartnerNode.InnerText);
+            objBE.CM = objBE.CM == "" ? xPartnerNode.InnerText : objBE.CM;
+
+            XmlNode xASTransactionID = GRFile.SelectSingleNode("ns0:RcvInventoryMovement_V01_00_00/ApplicationArea/ns0:ReferenceId", namespaceManager);
+            objBE.FeedTxnID = xASTransactionID == null ? "" : xASTransactionID.InnerText;
+
+            XmlNode xControlNumber = GRFile.SelectSingleNode("ns0:RcvInventoryMovement_V01_00_00/routing/ControlNumber", namespaceManager);
+            objBE.ControlNumber = xControlNumber == null ? "" : xControlNumber.InnerText;
+
+            XmlNode xTxnType = GRFile.SelectSingleNode("ns0:RcvInventoryMovement_V01_00_00/routing/TransactionType", namespaceManager);
+            objBE.TxnType = xTxnType == null ? "" : xTxnType.InnerText;
+
+            XmlNode xShipDate = GRFile.SelectSingleNode("ns0:RcvInventoryMovement_V01_00_00/DataArea/InventoryMovement/Header/ns0:TransactionDateTime", namespaceManager);
+            //if (xShipDate != null)
+            //{
+            //    try
+            //    {
+            //        objBE.TxnDate = Convert.ToDateTime(xShipDate.InnerText.Substring(0, 4) + "-" + xShipDate.InnerText.Substring(4, 2) + "-" + xShipDate.InnerText.Substring(6, 2));
+            //    }
+            //    catch (Exception ex)
+            //    {
+
+            //    }
+            //}
+
+            XmlNodeList PartiesNodeList = GRFile.SelectNodes("ns0:RcvInventoryMovement_V01_00_00/DataArea/InventoryMovement/Header/Parties", namespaceManager);
+            XmlNodeList LineItemNodes = GRFile.SelectNodes("ns0:RcvInventoryMovement_V01_00_00/DataArea/InventoryMovement/LineItem", namespaceManager);
+
+            if (LineItemNodes != null)
+                objBE.LineCount = LineItemNodes.Count;
+
+
+            foreach (XmlNode xnd in PartiesNodeList)
+            {
+                if (xnd.SelectSingleNode("ns0:PartyTypeCode", namespaceManager).InnerText == "Received From")
+                {
+                    XmlNode xCMNode = xnd.SelectSingleNode("ns0:PartyIdentifier", namespaceManager);
+                    objBE.ReceivedFrom = xCMNode == null ? "" : objBC.GetPartnerName(xCMNode.InnerText);
+                    objBE.ReceivedFrom = objBE.ReceivedFrom == "" ? xCMNode.InnerText : objBE.ReceivedFrom;
+                }
+                if (xnd.SelectSingleNode("ns0:PartyTypeCode", namespaceManager).InnerText == "Received By")
+                {
+                    XmlNode xCMNode = xnd.SelectSingleNode("ns0:PartyIdentifier", namespaceManager);
+                    objBE.ReceivedBy = xCMNode == null ? "" : objBC.GetPartnerName(xCMNode.InnerText);
+                    objBE.ReceivedBy = objBE.ReceivedBy == "" ? xCMNode.InnerText : objBE.ReceivedBy;
+                }
+            }
+            GenericCollection<GRLinesBE> objLinesList = new GenericCollection<GRLinesBE>();
+            int j = 0;
+            foreach (XmlNode xnd in LineItemNodes)
+            {
+                GRLinesBE objLineBE = new GRLinesBE();
+                XmlNodeList LineDocRefNodes = GRFile.SelectNodes("/ns0:RcvInventoryMovement_V01_00_00/DataArea/InventoryMovement/LineItem/DocumentReference", namespaceManager);
+                foreach (XmlNode xndDoc in LineDocRefNodes)
+                {
+                    if (xndDoc.SelectSingleNode("ns0:DocumentTypeCode", namespaceManager).InnerText == "Reference Document")
+                    {
+                        XmlNode xCMNode = xndDoc.SelectSingleNode("ns0:Id", namespaceManager);
+                        objLineBE.RefDocument = xPartnerNode == null ? "" : xCMNode.InnerText;
+                    }
+                    if (xndDoc.SelectSingleNode("ns0:DocumentTypeCode", namespaceManager).InnerText == "Purchase Order")
+                    {
+                        XmlNode xCMNode = xndDoc.SelectSingleNode("ns0:Id", namespaceManager);
+                        objLineBE.PONumber = xPartnerNode == null ? "" : xCMNode.InnerText;
+                        XmlNode xLineNumber = xndDoc.SelectSingleNode("ns0:LineNumber", namespaceManager);
+                        objLineBE.LineNumber = xLineNumber == null ? "" : xLineNumber.InnerText;
+                    }
+
+                    if (xndDoc.SelectSingleNode("ns0:DocumentTypeCode", namespaceManager).InnerText == "Load Id")
+                    {
+                        XmlNode xCMNode = xndDoc.SelectSingleNode("ns0:Id", namespaceManager);
+                        objLineBE.LoadID = xPartnerNode == null ? "" : xCMNode.InnerText;
+                    }
+                }
+                XmlNode xSKUNode = xnd.SelectSingleNode("ProductId/ns0:ProductIdentifier", namespaceManager);
+                objLineBE.SKU = xSKUNode == null ? "" : xSKUNode.InnerText;
+                XmlNode xUnitsShippedNode = xnd.SelectSingleNode("ns0:Quantity", namespaceManager);
+                objLineBE.ItemQuantity = xUnitsShippedNode == null ? "" : xUnitsShippedNode.InnerText;
+                objLinesList.Add(j, objLineBE);
+                j++;
+            }
+            objBE.GRLines = objLinesList;
+            objBE.TxnDate = listOfBE[i].TxnDate;
+            if (objBE.LineCount == 1 && objLinesList != null)
+            {
+                objBE.PONumber = objLinesList[0].PONumber;
+                objBE.LoadID = objLinesList[0].LoadID;
+            }
+            else
+            {
+                objBE.PONumber = "See Details";
+                objBE.LoadID = "See Details";
+            }
+            GRList.Add(i, objBE);
+        }
+        return GRList;
+    }
+
+    protected void gvGR_RowCommand(object sender, GridViewCommandEventArgs e)
+    {
+        try
+        {
+            if (e.CommandName == "ViewDetails")
+            {
+                ImageButton lb = (ImageButton)e.CommandSource;
+                GridViewRow gvr = (GridViewRow)lb.NamingContainer;
+                GridView gridview = gvr.NamingContainer as GridView;
+                int index = Convert.ToInt32(e.CommandArgument);
+                GridViewRow selectedRow = gridview.Rows[index - (gridview.PageIndex * gridview.PageSize)];
+                Label lblSNo = (Label)selectedRow.FindControl("lblSNo");
+                GenericCollection<GRHeaderBE> listOfBE = (GenericCollection<GRHeaderBE>)Session[vGRList];
+                GenericCollection<GRLinesBE> lines = new GenericCollection<GRLinesBE>();
+                GRHeaderBE Headerobj = new GRHeaderBE();
+
+                foreach (GRHeaderBE obj in listOfBE)
+                {
+                    if (obj.SNo.ToString() == lblSNo.Text)
+                    {
+                        Headerobj = obj;
+                        break;
+                    }
+                }
+
+                lines = Headerobj.GRLines;
+                trPODetails.Visible = false;
+                Session["GRLineCollection"] = lines;
+                databind();
+            }
+            if (e.CommandName == "ViewFiles")
+            {
+                ImageButton lb = (ImageButton)e.CommandSource;
+                GridViewRow gvr = (GridViewRow)lb.NamingContainer;
+                GridView gridview = gvr.NamingContainer as GridView;
+                int index = Convert.ToInt32(e.CommandArgument);
+                GridViewRow selectedRow = gridview.Rows[index - (gridview.PageIndex * gridview.PageSize)];
+
+                Label lblSNo = (Label)selectedRow.FindControl("lblSNo");
+                GenericCollection<GRHeaderBE> listOfBE = (GenericCollection<GRHeaderBE>)Session[vGRList];
+                GRHeaderBE Headerobj = new GRHeaderBE();
+
+                foreach (GRHeaderBE obj in listOfBE)
+                {
+                    if (obj.SNo.ToString() == lblSNo.Text)
+                    {
+                        Headerobj = obj;
+                        break;
+                    }
+                }
+
+                Session["ArchiveFiles"] = Headerobj;
+                Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction", "ShowNewPage();", true);
+            }
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    protected void btnfirst_Click(object sender, EventArgs e)
+    {
+        pos = 0;
+        databind();
+    }
+
+    protected void btnprevious_Click(object sender, EventArgs e)
+    {
+        pos = (int)this.ViewState["vs"];
+        pos -= 1;
+        this.ViewState["vs"] = pos;
+        databind();
+    }
+
+    protected void btnnext_Click(object sender, EventArgs e)
+    {
+        pos = (int)this.ViewState["vs"];
+        pos += 1;
+        this.ViewState["vs"] = pos;
+        databind();
+    }
+
+    protected void btnlast_Click(object sender, EventArgs e)
+    {
+        pos = (ViewState["PageCount"] != null ? Convert.ToInt32(ViewState["PageCount"]) : 1) - 1;
+        databind();
+    }
+
+    private void databind()
+    {
+        try
+        {
+            GenericCollection<GRLinesBE> GRLineCollection = Session["GRLineCollection"] == null ? null : Session["GRLineCollection"] as GenericCollection<GRLinesBE>;
+            if (GRLineCollection != null)
+            {
+                adsource = new PagedDataSource();
+                adsource.DataSource = GRLineCollection;
+                adsource.PageSize = 10;
+                ViewState["PageCount"] = (GRLineCollection.Count % 10) == 0 ? (GRLineCollection.Count / 10) : (GRLineCollection.Count / 10) + 1;
+                adsource.AllowPaging = true;
+                adsource.CurrentPageIndex = pos;
+                btnfirst.Enabled = !adsource.IsFirstPage;
+                btnprevious.Enabled = !adsource.IsFirstPage;
+                btnlast.Enabled = !adsource.IsLastPage;
+                btnnext.Enabled = !adsource.IsLastPage;
+
+                gvGRLines.DataSource = adsource;
+                gvGRLines.DataBind();
+                divPaginationPoLine.Visible = true;
+                gvGRLines.Visible = true;
+                trPODetails.Visible = true;
+            }
+            else
+            {
+                trPODetails.Visible = false;
+                gvGRLines.DataSource = null;
+                gvGRLines.DataBind();
+                divPaginationPoLine.Visible = false;
+                gvGRLines.Visible = false;
+            }
+        }
+        catch (Exception Ex)
+        {
+            lblSearchError.Text = Ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(Ex);
+        }
+    }
+    private void LoadGRFiles(string Archivepath, string TransactionID, string CorpStatus, string ExtStatus, string TxnType, string PONumber, string PODate, string Partner, string IsICOE, string BOD)
+    {
+        PurchaseOrderBC objBC = new PurchaseOrderBC();
+        PurchaseOrderBE objArchiveBE = objBC.LoadPOFiles(TransactionID);
+        objArchiveBE.PODate = PODate;
+        objArchiveBE.PONumber = PONumber;
+        objArchiveBE.ExtranetStatus = ExtStatus;
+        objArchiveBE.CorpnetStatus = CorpStatus;
+        objArchiveBE.CM = Partner;
+        objArchiveBE.ReferenceID = TransactionID;
+        objArchiveBE.isICOEPartner = IsICOE;
+        objArchiveBE.MessageArchivePath = Archivepath;
+        objArchiveBE.POCBODRcvd = BOD;
+        Session["ArchiveFiles"] = objArchiveBE;
+        Page.ClientScript.RegisterStartupScript(this.GetType(), "CallMyFunction", "ShowNewPage();", true);
+
+    }
+
+    //private GenericCollection<PurchaseOrderBE> GetGRStatus(GenericCollection<PurchaseOrderBE> CorpnetPOlist)
+    //{
+    //    PurchaseOrderBC objBC = new PurchaseOrderBC();
+    //    GenericCollection<PurchaseOrderBE> ExtranetList = new GenericCollection<PurchaseOrderBE>();
+    //    string POList = @"'";
+    //    string ExtranetPartners = ConfigurationSettings.AppSettings["ExtranetCMS"];
+    //    foreach (PurchaseOrderBE objBE in CorpnetPOlist)
+    //    {
+    //        if (ExtranetPartners.Contains(objBE.CM))
+    //            POList += objBE.PONumber + @"','";
+    //    }
+
+    //    ExtranetList = objBC.GetGRStatus(POList);
+
+    //    foreach (PurchaseOrderBE ExtobjBE in ExtranetList)
+    //    {
+    //        foreach (PurchaseOrderBE CorpObjBE in CorpnetPOlist)
+    //        {
+    //            if (ExtobjBE.PONumber == CorpObjBE.PONumber)
+    //            {
+    //                CorpObjBE.ExtranetStatus = ExtobjBE.ExtranetStatus;
+    //            }
+    //        }
+    //    }
+
+    //    return CorpnetPOlist;
+    //}
+
+    //private GenericCollection<PurchaseOrderBE> ModifyExtranetPOStatus(GenericCollection<PurchaseOrderBE> CorpnetPOlist)
+    //{
+    //    PurchaseOrderBC objBC = new PurchaseOrderBC();
+    //    GenericCollection<PurchaseOrderBE> ExtranetList = new GenericCollection<PurchaseOrderBE>();
+    //    string POList = @"'";
+    //    string ExtranetPartners = ConfigurationSettings.AppSettings["ExtranetCMS"];
+    //    foreach (PurchaseOrderBE objBE in CorpnetPOlist)
+    //    {
+    //        if (ExtranetPartners.Contains(objBE.CM))
+    //        {
+    //            POList += objBE.PONumber + @"','";
+    //            objBE.isICOEPartner = "NO";
+    //        }
+    //        else
+    //            objBE.isICOEPartner = "YES";
+    //    }
+
+    //    ExtranetList = objBC.ModifyExtranetPOStatus(POList);
+
+    //    foreach (PurchaseOrderBE ExtobjBE in ExtranetList)
+    //    {
+    //        foreach (PurchaseOrderBE CorpObjBE in CorpnetPOlist)
+    //        {
+    //            if (ExtobjBE.PONumber == CorpObjBE.PONumber && ExtobjBE.CM == CorpObjBE.CM)
+    //            {
+    //                CorpObjBE.ExtranetStatus = ExtobjBE.ExtranetStatus;
+    //            }
+    //        }
+    //    }
+
+    //    return CorpnetPOlist;
+
+    //}
+    protected void gvGR_PageIndexChanging(object sender, GridViewPageEventArgs e)
+    {
+        try
+        {
+            lblSearchError.Text = string.Empty;
+            GenericCollection<GRLinesBE> listofBE = (GenericCollection<GRLinesBE>)Session[vGRList];
+
+            if (listofBE != null)
+            {
+                gvGR.PageIndex = e.NewPageIndex;
+                gvGR.DataSource = listofBE;
+                gvGR.DataBind();
+            }
+            else
+            {
+                gvGR.DataSource = null;
+                gvGR.DataBind();
+            }
+        }
+        catch (Exception Ex)
+        {
+            lblSearchError.Text = Ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(Ex);
+        }
+    }
+    protected void gvGRLines_PageIndexChanging(object sender, GridViewPageEventArgs e)
+    {
+        try
+        {
+            lblSearchError.Text = string.Empty;
+            GenericCollection<GRLinesBE> listofBE = (GenericCollection<GRLinesBE>)Session["GRLineCollection"];
+
+            if (listofBE != null)
+            {
+                gvGRLines.PageIndex = e.NewPageIndex;
+                gvGRLines.DataSource = listofBE;
+                gvGRLines.DataBind();
+                divPaginationPoLine.Visible = true;
+                gvGRLines.Visible = true;
+            }
+            else
+            {
+                gvGRLines.DataSource = null;
+                gvGRLines.DataBind();
+                divPaginationPoLine.Visible = false;
+                gvGRLines.Visible = false;
+            }
+        }
+        catch (Exception Ex)
+        {
+            lblSearchError.Text = Ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(Ex);
+        }
+    }
+    protected void gvGRLines_Sorting(object sender, GridViewSortEventArgs e)
+    {
+        try
+        {
+            SortDirection dir = (ViewState[vSortDirLine] == null) ? e.SortDirection : (SortDirection)Enum.Parse(typeof(SortDirection), ViewState[vSortDirLine].ToString());
+            GenericCollection<GRLinesBE> list = Session[vGRList] as GenericCollection<GRLinesBE>;
+            list = Utils.GridSorting<GRLinesBE>(gvGRLines, dir, e.SortExpression, list);
+            Session["GRLineCollection"] = list;
+            ViewState[vSortDirLine] = (dir == SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending;
+        }
+        catch (Exception ex)
+        {
+            lblSearchError.Text = ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(ex);
+        }
+    }
+    protected void gvGR_Sorting(object sender, GridViewSortEventArgs e)
+    {
+        try
+        {
+            SortDirection dir = (ViewState[vSortDir] == null) ? e.SortDirection : (SortDirection)Enum.Parse(typeof(SortDirection), ViewState[vSortDir].ToString());
+            GenericCollection<PurchaseOrderBE> list = Session[vGRList] as GenericCollection<PurchaseOrderBE>;
+            list = Utils.GridSorting<PurchaseOrderBE>(gvGR, dir, e.SortExpression, list);
+            Session[vGRList] = list;
+            ViewState[vSortDir] = (dir == SortDirection.Ascending) ? SortDirection.Descending : SortDirection.Ascending;
+        }
+        catch (Exception ex)
+        {
+            lblSearchError.Text = ex.Message;
+            lblSearchError.Visible = true;
+            logFile.ErrorLogging(ex);
+        }
+    }
+    protected void RepGvPagingItem_Bound(Object sender, RepeaterCommandEventArgs e)
+    {
+        if (e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem)
+        {
+            foreach (RepeaterItem item in RepGvPaging.Items)
+            {
+                LinkButton lbtSize = (LinkButton)item.FindControl("lbtnSize");
+                lbtSize.Visible = true;
+                Label lblSize = (Label)item.FindControl("lblPgSize");
+                lblSize.Visible = false;
+            }
+
+            LinkButton lbtnSize = (LinkButton)e.Item.FindControl("lbtnSize");
+            string size = lbtnSize.Text;
+            Label lbl = (Label)e.Item.FindControl("lblPgSize");
+            lbtnSize.Visible = false;
+            lbl.Visible = true;
+            ViewState[grdPageSize] = size.ToString();
+            gridPaging(size);
+        }
+    }
+
+    protected void gridPaging(string size)
+    {
+        try
+        {
+            lblSearchError.Text = string.Empty;
+            GenericCollection<PurchaseOrderBE> listofBE = (GenericCollection<PurchaseOrderBE>)Session[vGRList];
+
+            if (listofBE != null)
+            {
+                if (listofBE.Count == 0)
+                {
+                    lblSearchError.Text = "No records found.";
+                    lblSearchError.Visible = true;
+                    gvGR.DataSource = null;
+                    gvGR.DataBind();
+                    lblRec.Visible = false;
+                }
+                else
+                {
+                    Utils.GridPaging(gvGR, Convert.ToInt32(size), listofBE);
+                    lblRec.Text = Utils.GridRecDispMsg(gvGR.PageIndex, gvGR.PageSize, listofBE.Count);
+                    lblRec.Visible = true;
+                }
+
+            }
+            else
+            {
+                gvGR.DataSource = null;
+                gvGR.DataBind();
+                lblRec.Visible = false;
+            }
+        }
+        catch (Exception Ex)
+        {
+            lblSearchError.Text = Ex.Message;
+            logFile.ErrorLogging(Ex);
+        }
+    }
+
+
+
+    protected void drdServiceComponentPartnerSearch_PreRender(object sender, EventArgs e)
+    {
+
+    }
+    protected void drdServiceComponentPartnerSearch_SelectedIndexChanged(object sender, EventArgs e)
+    {
+
+    }
+    protected void btnCancel_Click(object sender, EventArgs e)
+    {
+        rowGrid.Visible = false;
+        lblSearchError.Text = "";
+        BindRepeater();
+    }
+}

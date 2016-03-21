@@ -1,0 +1,252 @@
+﻿/* Move down content because we have a fixed navbar that is 50px tall */
+body {
+    padding-top: 50px;
+    padding-bottom: 20px;
+}
+
+/* Wrapping element */
+/* Set some basic padding to keep content from hitting the edges */
+.body-content {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+/* Set widths on the form inputs since otherwise they're 100% wide */
+/*input,
+select,
+textarea {
+    max-width: 280px;
+}*/
+
+/* Responsive: Portrait tablets and up */
+@media screen and (min-width: 768px) {
+    .jumbotron {
+        margin-top: 20px;
+    }
+
+    .body-content {
+        padding: 0;
+    }
+}
+
+.SearchTd1 {
+    padding: 5px;
+    margin-top: 15px;
+}
+
+.SearchTd2 {
+    padding: 5px;
+}
+
+.mGrid {
+    width: 100%;
+    background-color: #fff;
+    border: solid 1px #525252;
+    border-collapse: collapse;
+    border-radius: 10px;
+}
+
+    .mGrid td {
+        padding: 2px;
+        border: solid 1px #c1c1c1;
+        color: #717171;
+        font-size: 10px;
+    }
+
+    .mGrid th {
+        padding: 10px 0px 10px 4px;
+        color: #fff;
+        background: #424242 url(grd_head.png) repeat-x top;
+        border-left: solid 1px #525252;
+        font-size: 10px;
+    }
+
+    .mGrid .alt {
+        background: #fcfcfc url(grd_alt.png) repeat-x top;
+    }
+
+    .mGrid .pgr {
+        background: #424242 url(grd_pgr.png) repeat-x top;
+    }
+
+        .mGrid .pgr table {
+            margin: 5px 0;
+        }
+
+        .mGrid .pgr td {
+            border-width: 0;
+            padding: 0 6px;
+            border-left: solid 1px #666;
+            font-weight: bold;
+            color: #fff;
+            line-height: 8px;
+        }
+
+        .mGrid .pgr a {
+            color: #666;
+            text-decoration: none;
+        }
+
+            .mGrid .pgr a:hover {
+                color: #000;
+                text-decoration: none;
+            }
+
+
+.rt-align {
+    float: right;
+}
+
+.displ {
+    float: left;
+}
+
+.sdm-content-wrapper {
+    margin-right: 20px;
+    margin-left: 20px;
+}
+
+.sdm-required:after {
+    content: "*";
+    color: red;
+}
+
+.sdm-tooltip {
+    pointer-events: inherit;
+}
+
+.sdm-nav-fixed-left {
+    position: fixed;
+    margin: 30px 0 20px;
+    z-index: 1000;
+}
+
+.sdm-nav-pills-style > li > a {
+    color: #286090;
+    background-color: #f8f8f8;
+}
+
+    .sdm-nav-pills-style > li > a:hover {
+        color: #f8f8f8;
+        background-color: #666;
+        border-color: Black;
+    }
+
+.DetailsImage {
+    padding: 0px;
+    margin-left: 12px;
+}
+
+.StatusImages {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.GridAlling {
+    width: 100%;
+    /*margin-left: 25px;*/
+}
+
+.HeaderLabels {
+    background-color: #424242;
+    font-weight: bold;
+    color: White;
+    font-size: 12px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.btnHeader {
+    display: inline-block;
+    padding: 6px 12px;
+    margin-bottom: 0;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 1.428571429;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+    background-color: #808080;
+    color: #FFF;
+}
+
+
+.cal_Theme1 .ajax__calendar_container {
+    background-color: #DEF1F4;
+    border: solid 1px #77D5F7;
+    width: 180px;
+}
+
+.cal_Theme1 .ajax__calendar_header {
+    background-color: #ffffff;
+    margin-bottom: 4px;
+}
+
+.cal_Theme1 .ajax__calendar_title,
+.cal_Theme1 .ajax__calendar_next,
+.cal_Theme1 .ajax__calendar_prev {
+    color: #004080;
+    padding-top: 3px;
+}
+
+.cal_Theme1 .ajax__calendar_body {
+    background-color: #ffffff;
+    border: solid 1px #77D5F7;
+}
+
+.cal_Theme1 .ajax__calendar_dayname {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 4px;
+    margin-top: 2px;
+    color: #004080;
+}
+
+.cal_Theme1 .ajax__calendar_day {
+    color: #004080;
+    text-align: center;
+}
+
+.cal_Theme1 .ajax__calendar_hover .ajax__calendar_day,
+.cal_Theme1 .ajax__calendar_hover .ajax__calendar_month,
+.cal_Theme1 .ajax__calendar_hover .ajax__calendar_year,
+.cal_Theme1 .ajax__calendar_active {
+    color: #004080;
+    font-weight: bold;
+    background-color: #DEF1F4;
+}
+
+.cal_Theme1 .ajax__calendar_today {
+    font-weight: bold;
+}
+
+.cal_Theme1 .ajax__calendar_other,
+.cal_Theme1 .ajax__calendar_hover .ajax__calendar_today,
+.cal_Theme1 .ajax__calendar_hover .ajax__calendar_title {
+    color: #bbbbbb;
+}
+
+.errorLabel {
+    color: #820b0b;
+    font-weight: bold;
+}
+
+
+.text-danger {
+    color: #a94442;
+}
+
+.textBig
+{
+    width:100%;
+    height:150px;
+}
+
+.chkCEVA{zoom:1.5}

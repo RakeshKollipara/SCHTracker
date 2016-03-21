@@ -1,0 +1,183 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Site.master.cs" Inherits="SiteMaster" %>
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head runat="server">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%: Page.Title %> - SCH Tracker</title>
+
+    <asp:PlaceHolder runat="server">
+        <%: Scripts.Render("~/bundles/modernizr") %>
+    </asp:PlaceHolder>
+    <webopt:BundleReference runat="server" Path="~/Content/css" />
+    <link href="~/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
+</head>
+<body>
+    <form runat="server">
+        <asp:ScriptManager runat="server">
+            <Scripts>
+                <%--To learn more about bundling scripts in ScriptManager see http://go.microsoft.com/fwlink/?LinkID=301884 --%>
+                <%--Framework Scripts--%>
+                <asp:ScriptReference Name="MsAjaxBundle" />
+                <asp:ScriptReference Name="jquery" />
+                <asp:ScriptReference Name="bootstrap" />
+                <asp:ScriptReference Name="respond" />
+                <asp:ScriptReference Name="WebForms.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebForms.js" />
+                <asp:ScriptReference Name="WebUIValidation.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebUIValidation.js" />
+                <asp:ScriptReference Name="MenuStandards.js" Assembly="System.Web" Path="~/Scripts/WebForms/MenuStandards.js" />
+                <asp:ScriptReference Name="GridView.js" Assembly="System.Web" Path="~/Scripts/WebForms/GridView.js" />
+                <asp:ScriptReference Name="DetailsView.js" Assembly="System.Web" Path="~/Scripts/WebForms/DetailsView.js" />
+                <asp:ScriptReference Name="TreeView.js" Assembly="System.Web" Path="~/Scripts/WebForms/TreeView.js" />
+                <asp:ScriptReference Name="WebParts.js" Assembly="System.Web" Path="~/Scripts/WebForms/WebParts.js" />
+                <asp:ScriptReference Name="Focus.js" Assembly="System.Web" Path="~/Scripts/WebForms/Focus.js" />
+                <asp:ScriptReference Name="WebFormsBundle" />
+                <%--Site Scripts--%>
+            </Scripts>
+        </asp:ScriptManager>
+        <script src="Scripts/ModalPopupWindow.js" type="text/javascript"></script>
+        <script>
+
+            var modalWinMaster = new CreateModalPopUpObject();
+            modalWinMaster.SetLoadingImagePath("Images/loading.gif");
+            modalWinMaster.SetCloseButtonImagePath("Images/remove.gif");
+            //Uncomment below line to make look buttons as link
+            modalWinMaster.SetButtonStyle("background:none;border:none;textDecoration:underline;cursor:pointer");
+            function ShowMessage() {
+                var FinalMessage = 'Please find the contacts for Providing feedback or Report any Issues : ' + '\n' + '  Primary Contact : Gladys Esther (gladyses)' + '\n' + ' Secondary Contact : Rakesh Kollipara (v-rakek). Thank you for your valuable feedback or Suggestion ';
+                modalWinMaster.ShowMessage(FinalMessage, 200, 450, 'Contact Us');
+            }
+
+            function ShowNewPage(Type) {
+                modalWinMaster.Draggable = false;
+                modalWinMaster.ShowURL('ErrorPage.aspx?type=' + Type, 370, 470, 'Details', null);
+            }
+
+        </script>
+        <link rel="stylesheet" href="Content/styles.css">
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js"></script>
+        <script type="text/javascript" src="Scripts/script.js"></script>
+
+
+        <div class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" runat="server" href="~/">Supply Chain Hub Tracking</a>
+                </div>
+                <div class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav navbar-right">
+                        <li style="padding-top: 10px">
+                            <asp:DropDownList ID="drdEnvironment" AutoPostBack="true" OnSelectedIndexChanged="drdEnvironment_SelectedIndexChanged" runat="server" CssClass="form-control dropdown sdm-dropdown">
+                                <asp:ListItem Text="UAT" Value="UAT" />
+                                <asp:ListItem Text="PRODUCTION" Value="PRODUCTION" />
+                            </asp:DropDownList></li>
+                        <li><a href="Documents/Contact.txt" style="font-weight: bold; text-decoration: underline">Contact US </a>
+                            <li>
+                                <a href="Documents/UserGuide.docx" style="font-weight: bold; text-decoration: underline">User Guide </a>
+                            </li>
+                    </ul>
+                </div>
+                <%--<div class="navbar-collapse collapse">
+                    <ul class="nav navbar-nav">
+                        <li><a runat="server" href="~/">Home</a></li>
+                        <li><a runat="server" href="~/About">About</a></li>
+                        <li><a runat="server" href="~/Contact">Contact</a></li>
+                    </ul>
+                    <asp:LoginView runat="server" ViewStateMode="Disabled">
+                        <AnonymousTemplate>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li><a runat="server" href="~/Account/Register">Register</a></li>
+                                <li><a runat="server" href="~/Account/Login">Log in</a></li>
+                            </ul>
+                        </AnonymousTemplate>
+                        <LoggedInTemplate>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li><a runat="server" href="~/Account/Manage" title="Manage your account">Hello, <%: Context.User.Identity.GetUserName()  %>!</a></li>
+                                <li>
+                                    <asp:LoginStatus runat="server" LogoutAction="Redirect" LogoutText="Log off" LogoutPageUrl="~/" OnLoggingOut="Unnamed_LoggingOut" />
+                                </li>
+                            </ul>
+                        </LoggedInTemplate>
+                    </asp:LoginView>
+                </div>--%>
+            </div>
+            <%--<div class="hidden-xs col-md-3 col-sm-4">
+                <ul class="nav nav-pills nav-stacked sdm-nav-fixed-left sdm-nav-pills-style">
+                    <li>
+                        <asp:LinkButton ID="lnkHome" CausesValidation="false" Text="Flow Search" PostBackUrl="~/Search.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="LinkButton6" CausesValidation="false" Text="All Txns" PostBackUrl="~/Main.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="LinkButton7" CausesValidation="false" Text="PO Search" PostBackUrl="~/PO.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="Linkbutton1" CausesValidation="false" Text="ASN Search" PostBackUrl="~/ASN.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="Linkbutton2" CausesValidation="false" Text="GR Search" PostBackUrl="~/GR.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="Linkbutton3" CausesValidation="false" Text="841 Search" PostBackUrl="~/Transformations.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="Linkbutton4" CausesValidation="false" Text="945 DESADV" PostBackUrl="~/ShowShipDESADV.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="LinkButton8" CausesValidation="false" Text="DO(940)" PostBackUrl="~/DO.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="LinkButton9" CausesValidation="false" Text="945 (EDI/DESADV)" PostBackUrl="~/ShowShipment.aspx" runat="server" />
+                    </li>
+                    <li>
+                        <asp:LinkButton ID="Linkbutton5" CausesValidation="false" Text="Add More" runat="server" />
+                    </li>
+                </ul>
+            </div>--%>
+        </div>
+
+        <div class="container body-content" style="width: 90%">
+            <table>
+                <tr>
+                    <td style="padding-top: 15px; vertical-align: top">
+                        <div id='cssmenu'>
+                            <ul>
+                                <li id="pageSearch" runat="server"><a href="Search.aspx">PO Flow Search</a></li>
+                                <%--<li id="pageTxnSearch" runat="server"><a href="Main.aspx">All Txns Search</a></li>--%>
+                                <li id="pagePO" runat="server"><a href="PO.aspx">PO Search</a></li>
+                                <li id="pageASN" runat="server"><a href="ASN.aspx">3B2 (ASN) Search</a></li>
+                                <li id="pageGR" runat="server"><a href="GR.aspx">861/4B2 (GR) Search</a></li>
+                                <li id="page841" runat="server"><a href="Transformations.aspx">841 Search</a></li>
+                                <%--<li id="pagessdesadv" runat="server"><a href="ShowShipDESADV.aspx">945 DESADV</a></li>--%>
+                                <li id="pageDO" runat="server"><a href="DO.aspx">940 (DO)</a></li>
+                                <li id="pageShowShip" runat="server"><a href="ShowShipment.aspx">945 EDI/DESADV</a></li>
+                                <li id="pageQuery" runat="server"><a href="Query.aspx">Query</a></li>
+                            </ul>
+                        </div>
+                    </td>
+                    <td style="padding-left: 30px;width:100%" >
+                        <asp:ContentPlaceHolder ID="MainContent" runat="server">
+                        </asp:ContentPlaceHolder>
+                    </td>
+                </tr>
+            </table>
+
+
+        </div>
+        <div class="container body-content">
+            <hr />
+            <footer>
+                <p>&copy; <%: DateTime.Now.Year %> - Suppy Chain Hub Tracker (SCHTracker)</p>
+            </footer>
+        </div>
+    </form>
+</body>
+</html>

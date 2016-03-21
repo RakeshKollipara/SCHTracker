@@ -1,0 +1,9 @@
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.BusinessComponents.dll
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.BusinessComponents.pdb
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.BusinessEntities.dll
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.DataAccessLayer.dll
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.BusinessEntities.pdb
+D:\BPM\BPM.BusinessComponents\bin\Debug\BPM.DataAccessLayer.pdb
+D:\BPM\BPM.BusinessComponents\obj\Debug\BPM.BusinessComponents.csprojResolveAssemblyReference.cache
+D:\BPM\BPM.BusinessComponents\obj\Debug\BPM.BusinessComponents.dll
+D:\BPM\BPM.BusinessComponents\obj\Debug\BPM.BusinessComponents.pdb

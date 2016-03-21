@@ -1,0 +1,239 @@
+﻿<%@ Page Title="ASN Search" Language="C#" MasterPageFile="~/Site.master" AutoEventWireup="true" ClientIDMode="Static" CodeFile="ASN_File.aspx.cs" Inherits="ASN_File" %>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="MainContent" runat="Server">
+    <script lang="javascript" type="text/javascript">
+        function divexpandcollapse(divname) {
+            alert(divname);
+            var div = document.getElementById(divname);
+            var img = document.getElementById('img' + divname);
+            if (div.style.display == "none") {
+                div.style.display = "inline";
+                img.src = "Images/minus.gif";
+            } else {
+                div.style.display = "none";
+                img.src = "Images/plus.gif";
+            }
+        }
+    </script>
+    <script src="Scripts/ModalPopupWindow.js" type="text/javascript"></script>
+    <script>
+
+        var modalWin = new CreateModalPopUpObject();
+        modalWin.SetLoadingImagePath("Images/loading.gif");
+        modalWin.SetCloseButtonImagePath("Images/remove.gif");
+        //Uncomment below line to make look buttons as link
+        //modalWin.SetButtonStyle("background:none;border:none;textDecoration:underline;cursor:pointer");
+
+        function ShowNewPage() {
+            modalWin.Draggable = false;
+            modalWin.ShowURL('AchiveFilesPOPUp.aspx?type=ASN', 370, 470, 'Archvie Files', null);
+        }
+
+        function ShowMessage(PoNumber, TxnType, ErrorNumber, ErrorDesc) {
+            var FinalMessage = ' PO Number : ' + PoNumber + '\n' + ' Transaction Type : ' + TxnType + '\n' + ' Error Details : ' + '\n' + ' Error Number : ' + ErrorNumber + '\n' + ' Error Description : ' + '\n' + ErrorDesc;
+            modalWin.ShowMessage(FinalMessage, 300, 400, 'Error Descitpion');
+        }
+
+    </script>
+    <div class="jumbotron">
+        <p><%--<a href="http://www.asp.net" class="btn btn-primary btn-lg">Learn more &raquo;</a>--%></p>
+        <div class="form-group">
+            <table>
+                <tr>
+                    <td>
+                        <div class="SearchTd1">
+                            <asp:Label ID="Label3" runat="server" Text="PO Number" />
+                            <asp:TextBox ID="txtPONumber" runat="server" CssClass="form-control dropdown sdm-dropdown" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="SearchTd1">
+                            <asp:Label ID="Label9" runat="server" Text="Load ID" />
+                            <asp:TextBox ID="txtLoadID" runat="server" CssClass="form-control dropdown sdm-dropdown" />
+                        </div>
+                    </td>
+
+                    <td>
+                        <div class="SearchTd1">
+                            <asp:Label ID="Label5" runat="server" Text="Partner" />
+                            <asp:DropDownList ID="drdServiceComponentPartnerSearch" runat="server" AutoPostBack="true" CssClass="form-control dropdown sdm-dropdown" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="SearchTd1">
+                            <asp:Label ID="Label7" runat="server" CssClass="sdm-required control-label" Text="Date From" />
+                            <asp:TextBox ID="txtDateFrom" runat="server" CssClass="form-control dropdown sdm-dropdown" />
+                            <ajaxToolkit:CalendarExtender CssClass="cal_Theme1" ID="CalExtDateFrom" TargetControlID="txtDateFrom" Format="MM/dd/yyyy" runat="server" />
+                        </div>
+                    </td>
+                    <td>
+                        <div class="SearchTd1">
+                            <asp:Label ID="Label8" runat="server" CssClass="sdm-required control-label" Text="Date To" />
+                            <asp:TextBox ID="txtDateTo" runat="server" CssClass="form-control dropdown sdm-dropdown" />
+                            <ajaxToolkit:CalendarExtender CssClass="cal_Theme1" ID="CalExtDateTo" TargetControlID="txtDateTo" Format="MM/dd/yyyy" runat="server" />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="SearchTd2">
+                            <asp:Label ID="Label1" runat="server" Text="ASN Status" />
+                            <asp:DropDownList ID="drdASNStatus" runat="server" AutoPostBack="true" CssClass="form-control dropdown sdm-dropdown">
+                                <asp:ListItem Text="" Value="" />
+                                <asp:ListItem Text="Success" Value="Success" />
+                                <asp:ListItem Text="Failed" Value="Failed" />
+                            </asp:DropDownList>
+                        </div>
+                    </td>
+                    <td></td>
+                    <td></td>
+                    <td align="Middle" style="vertical-align: bottom; padding-bottom: 8px">
+                        <asp:Button ID="btnSearch" CssClass="btn btn-primary" runat="server" Text="Search" OnClick="btnSearch_Click" />
+
+                    </td>
+                    <td align="Left" style="vertical-align: bottom; padding-bottom: 8px">
+                        <asp:Button ID="btnCancel" CssClass="btn btn-primary" runat="server" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Click" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <asp:RequiredFieldValidator ID="reqDateto" ControlToValidate="txtDateTo" runat="server" CssClass="errorLabel" ErrorMessage="Please select DateTo" />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <asp:RequiredFieldValidator ID="RequiredFieldValidator1" ControlToValidate="txtDateFrom" CssClass="errorLabel" runat="server" ErrorMessage="Please select DateFrom" />
+                    </td>
+                </tr>
+                <tr id="rowPage" runat="server" visible="false">
+                    <td style="padding-left: 20px; padding-right: 20px" colspan="5">
+                        <table id="tblpagesize" runat="server" width="100%">
+                            <tr>
+                                <td class="displ">
+                                    <asp:Label ID="lblRec" runat="server" EnableTheming="false" Text="" />
+                                </td>
+                                <td class="rt-align">Results per page&nbsp;
+                                                        <asp:Repeater ID="RepGvPaging" runat="server" OnItemCommand="RepGvPagingItem_Bound">
+                                                            <ItemTemplate>
+                                                                <asp:LinkButton ID="lbtnSize" runat="server" Text='<%# Bind("PageSize") %>'></asp:LinkButton>
+                                                                <asp:Label ID="lblPgSize" runat="server" EnableTheming="false" Text='<%# Bind("PageSize") %>'
+                                                                    Visible="false" />
+                                                            </ItemTemplate>
+                                                        </asp:Repeater>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr id="rowGrid" runat="server">
+                    <td colspan="5" style="padding-left: 20px; padding-right: 20px; padding-bottom: 10px">
+                        <table style="width: 100%">
+                            <tr>
+                                <td>
+                                    <asp:GridView ID="gvASN" runat="server" AutoGenerateColumns="False"
+                                        AllowPaging="true" CssClass="mGrid" PagerStyle-CssClass="pgr" AllowSorting="true" HeaderStyle-ForeColor="White" HeaderStyle-Font-Underline="true" HeaderStyle-HorizontalAlign="Center" HeaderStyle-VerticalAlign="Middle"
+                                        AlternatingRowStyle-CssClass="alt" OnRowCommand="gvASN_RowCommand" OnPageIndexChanging="gvASN_PageIndexChanging"  OnSorting="gvASN_Sorting">
+                                        <Columns>
+                                            <asp:TemplateField>
+                                                <ItemStyle HorizontalAlign="Center" />
+                                                <ItemTemplate>
+                                                    <asp:ImageButton ID="ImgDetails" runat="server" Style="cursor: hand; font-size: 12px; text-decoration: underline"
+                                                        CommandArgument="<%# Container.DataItemIndex %>"
+                                                        CommandName="ViewDetails" ImageUrl="~/Images/Details.png" />
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:BoundField DataField="PONumber" HeaderText="PO Number" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="PONumber" />
+                                            <asp:BoundField DataField="LoadID" HeaderText="Load ID" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="LoadID" />
+                                            <asp:BoundField DataField="TxnType" HeaderText="Txn Type" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="TxnType" />
+                                            <asp:BoundField DataField="CM" HeaderText="CM" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="CM" />
+                                            <asp:BoundField DataField="TxnDate" HeaderText="Txn Date" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="TxnDate" />
+                                            <asp:BoundField DataField="ShipDate" HeaderText="Ship Date" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="ShipDate" />
+                                            <asp:BoundField DataField="OriginationParty" HeaderText="Orig Party" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="OriginationParty" />
+                                            <asp:BoundField DataField="SellingPartner" HeaderText="Selling Partner" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="SellingPartner" />
+                                            <asp:BoundField DataField="SAPShipTo" HeaderText="SAP Ship TO" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="SAPShipTo" />
+                                            <asp:BoundField DataField="FMV" HeaderText="FMVe" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="FMV" />
+                                            <asp:BoundField DataField="ASFeedTxnID" HeaderText="AS Txn ID" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="ASFeedTxnID" />
+                                            <asp:TemplateField HeaderText="ASN Status" SortExpression="ASNStatus">
+                                                <ItemStyle HorizontalAlign="Center" />
+                                                <HeaderStyle HorizontalAlign="Center" />
+                                                <ItemTemplate>
+                                                    <asp:Image ID="imgStatus" runat="server" />
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="Files">
+                                                <ItemStyle HorizontalAlign="Center" />
+                                                <ItemTemplate>
+                                                    <asp:ImageButton ID="ImgFiles" runat="server" Style="cursor: hand; font-size: 12px; text-decoration: underline"
+                                                        CommandArgument="<%# Container.DataItemIndex %>"
+                                                        CommandName="ViewFiles" ImageUrl="~/Images/Files.png" />
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                            <asp:TemplateField HeaderText="" Visible="false">
+                                                <ItemTemplate>
+                                                    <asp:Label ID="lblSNo" runat="server" Text='<%# Bind("SNo")%>' />
+                                                    <asp:Label ID="lblArchiveFiles" runat="server" Text='<%# Bind("ArchiveFile") %>' />
+                                                    <%-- <asp:Label ID="lblASNStatus" runat="server" Text='<%# Bind("ASNStatus") %>' />
+                                                    <asp:Label ID="lblGRStatus" runat="server" Text='<%# Bind("GRStatus") %>' />
+                                                    <asp:Label ID="lblPoNumber" runat="server" Text='<%# Bind("PONumber") %>' />--%>
+                                                </ItemTemplate>
+                                            </asp:TemplateField>
+                                        </Columns>
+                                    </asp:GridView>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <br />
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="5">
+                        <asp:Label ID="lblSearchError" runat="server" Visible="false" CssClass="errorLabel"></asp:Label>
+                    </td>
+                </tr>
+                <tr id="trPODetails" style="margin-top: 25px" runat="server" visible="false">
+                    <td style="padding-left: 20px; padding-right: 20px" colspan="2">
+                        <table style="width: 100%">
+                            <tr>
+                                <td style="vertical-align: top; padding-top: 10px; padding-left: 10px">
+                                    <span class="btnHeader" style="width: 100%">ASN Line Details</span><br />
+                                    <br />
+                                    <asp:UpdatePanel ID="UpdatePanel1" UpdateMode="Conditional" runat="server">
+                                        <ContentTemplate>
+                                            <asp:GridView ID="gvASNLines" runat="server" AutoGenerateColumns="False"
+                                                AllowPaging="true" CssClass="mGrid" PagerStyle-CssClass="pgr" AllowSorting="true"
+                                                HeaderStyle-ForeColor="White" HeaderStyle-Font-Underline="true" HeaderStyle-HorizontalAlign="Center"
+                                                HeaderStyle-VerticalAlign="Middle" AlternatingRowStyle-CssClass="alt" OnPageIndexChanging="gvASNLines_PageIndexChanging"
+                                                OnSorting="gvASNLines_Sorting">
+                                                <Columns>
+                                                    <asp:BoundField DataField="PONumber" HeaderText="PO Number" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="PONumber" />
+                                                    <asp:BoundField DataField="LineNumber" HeaderText="Line Number" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="LineNumber" />
+                                                    <asp:BoundField DataField="SKU" HeaderText="SKU" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="SKU" />
+                                                    <asp:BoundField DataField="ItemQuantity" HeaderText="Quantity" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="ItemQuantity" />
+                                                    <asp:BoundField DataField="PackSlipNumber" HeaderText="Slip Number" ItemStyle-HorizontalAlign="Center" HeaderStyle-HorizontalAlign="Center" SortExpression="PackSlipNumber" />
+                                                </Columns>
+                                            </asp:GridView>
+                                            <div class="pagination1" runat="server" visible="false" id="divPaginationPoLine">
+                                                <asp:Button ID="btnfirst" runat="server" Font-Bold="true" Text="<<" Height="25px"
+                                                    Width="43px" OnClick="btnfirst_Click" /><asp:Button ID="btnprevious" runat="server"
+                                                        Font-Bold="true" Text="<" Height="25px" Width="43px" OnClick="btnprevious_Click" /><asp:Button
+                                                            ID="btnnext" runat="server" Font-Bold="true" Text=">" Height="25px" Width="43px"
+                                                            OnClick="btnnext_Click" /><asp:Button ID="btnlast" runat="server" Font-Bold="true"
+                                                                Text=">>" Height="25px" Width="43px" OnClick="btnlast_Click" />
+                                            </div>
+                                        </ContentTemplate>
+                                    </asp:UpdatePanel>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</asp:Content>
+
+    
